@@ -7,7 +7,7 @@ case $pkgver in
 	*.*.*)	_kernver=${pkgver%.*};;
 	*.*) _kernver=$pkgver;;
 esac
-pkgrel=0
+pkgrel=1
 pkgdesc="Linux lts kernel"
 url="https://www.kernel.org"
 depends="mkinitfs"
@@ -38,7 +38,7 @@ source="https://cdn.kernel.org/pub/linux/kernel/v${pkgver%%.*}.x/linux-$_kernver
 	config-virt.x86
 	config-virt.x86_64
 	"
-subpackages="$pkgname-dev:_dev:$CBUILD_ARCH"
+subpackages="$pkgname-dbg:_dbg:$CBUILD_ARCH $pkgname-dev:_dev:$CBUILD_ARCH"
 _flavors=
 for _i in $source; do
 	case $_i in
@@ -47,7 +47,7 @@ for _i in $source; do
 		_f=${_f#config-}
 		_flavors="$_flavors ${_f}"
 		if [ "linux-$_f" != "$pkgname" ]; then
-			subpackages="$subpackages linux-${_f}::$CBUILD_ARCH linux-${_f}-dev:_dev:$CBUILD_ARCH"
+			subpackages="$subpackages linux-${_f}::$CBUILD_ARCH linux-${_f}-dbg:_dbg:$CBUILD_ARCH linux-${_f}-dev:_dev:$CBUILD_ARCH"
 		fi
 		;;
 	esac
@@ -153,11 +153,13 @@ _package() {
 	make -j1 modules_install $_install \
 		ARCH="$_carch" \
 		INSTALL_MOD_PATH="$_outdir" \
+		INSTALL_MOD_STRIP=1 \
 		INSTALL_PATH="$_outdir"/boot \
 		INSTALL_DTBS_PATH="$_outdir/boot/dtbs-$_buildflavor"
 
 	cp Module.symvers.backup Module.symvers
 
+	rm "$_outdir"/boot/System.map*
 	rm -f "$_outdir"/lib/modules/${_abi_release}/build \
 		"$_outdir"/lib/modules/${_abi_release}/source
 	rm -rf "$_outdir"/lib/firmware
@@ -228,6 +230,14 @@ _dev() {
 	mkdir -p "$subpkgdir"/lib/modules/${_abi_release}
 	ln -sf /usr/src/linux-headers-${_abi_release} \
 		"$subpkgdir"/lib/modules/${_abi_release}/build
+}
+
+_dbg() {
+	pkgdesc="Debug files (vmlinux, System.map) for $_flavor kernel"
+	depends=
+	local dir="$subpkgdir"/usr/src/linux-headers-${_abi_release}
+	cd "$srcdir"/build-$_flavor.$CARCH
+	install -Dt "$dir" -m644 System.map vmlinux
 }
 
 sha512sums="
