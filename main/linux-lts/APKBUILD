@@ -233,6 +233,8 @@ _dev() {
 }
 
 _dbg() {
+	local _flavor=$(echo $subpkgname | sed -E 's/(^linux-|-dbg$)//g')
+	local _abi_release=${pkgver}-${pkgrel}-$_flavor
 	pkgdesc="Debug files (vmlinux, System.map) for $_flavor kernel"
 	depends=
 	local dir="$subpkgdir"/usr/src/linux-headers-${_abi_release}
