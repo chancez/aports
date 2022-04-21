@@ -237,7 +237,8 @@ _dbg() {
 	local _abi_release=${pkgver}-${pkgrel}-$_flavor
 	pkgdesc="Debug files (vmlinux, System.map) for $_flavor kernel"
 	depends=
-	local dir="$subpkgdir"/usr/src/linux-headers-${_abi_release}
+	local dir="$subpkgdir"/usr/lib/debug/${_abi_release}
+	mkdir -p "$dir"
 	cd "$srcdir"/build-$_flavor.$CARCH
 	install -Dt "$dir" -m644 System.map vmlinux
 }
